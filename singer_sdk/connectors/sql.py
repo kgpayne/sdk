@@ -170,11 +170,15 @@ class SQLToJSONSchema:
         return cls(use_singer_decimal=config.get("use_singer_decimal", False))
 
     @functools.singledispatchmethod
-    def to_jsonschema(self, column_type: sqlalchemy.types.TypeEngine) -> dict:  # noqa: ARG002, D102, PLR6301
+    def to_jsonschema(
+        self, column_type: sqlalchemy.types.TypeEngine
+    ) -> dict:  # noqa: ARG002, D102, PLR6301
         return th.StringType.type_dict  # type: ignore[no-any-return]
 
     @to_jsonschema.register
-    def datetime_to_jsonschema(self, column_type: sqlalchemy.types.DateTime) -> dict:  # noqa: ARG002, PLR6301
+    def datetime_to_jsonschema(
+        self, column_type: sqlalchemy.types.DateTime
+    ) -> dict:  # noqa: ARG002, PLR6301
         """Return a JSON Schema representation of a generic datetime type.
 
         Args:
@@ -183,7 +187,9 @@ class SQLToJSONSchema:
         return th.DateTimeType.type_dict  # type: ignore[no-any-return]
 
     @to_jsonschema.register
-    def date_to_jsonschema(self, column_type: sqlalchemy.types.Date) -> dict:  # noqa: ARG002, PLR6301
+    def date_to_jsonschema(
+        self, column_type: sqlalchemy.types.Date
+    ) -> dict:  # noqa: ARG002, PLR6301
         """Return a JSON Schema representation of a date type.
 
         Args:
@@ -192,7 +198,9 @@ class SQLToJSONSchema:
         return th.DateType.type_dict  # type: ignore[no-any-return]
 
     @to_jsonschema.register
-    def time_to_jsonschema(self, column_type: sqlalchemy.types.Time) -> dict:  # noqa: ARG002, PLR6301
+    def time_to_jsonschema(
+        self, column_type: sqlalchemy.types.Time
+    ) -> dict:  # noqa: ARG002, PLR6301
         """Return a JSON Schema representation of a time type.
 
         Args:
@@ -201,7 +209,9 @@ class SQLToJSONSchema:
         return th.TimeType.type_dict  # type: ignore[no-any-return]
 
     @to_jsonschema.register
-    def integer_to_jsonschema(self, column_type: sqlalchemy.types.Integer) -> dict:  # noqa: ARG002, PLR6301
+    def integer_to_jsonschema(
+        self, column_type: sqlalchemy.types.Integer
+    ) -> dict:  # noqa: ARG002, PLR6301
         """Return a JSON Schema representation of a an integer type.
 
         Args:
@@ -210,7 +220,9 @@ class SQLToJSONSchema:
         return th.IntegerType.type_dict  # type: ignore[no-any-return]
 
     @to_jsonschema.register
-    def float_to_jsonschema(self, column_type: sqlalchemy.types.Numeric) -> dict:  # noqa: ARG002
+    def float_to_jsonschema(
+        self, column_type: sqlalchemy.types.Numeric
+    ) -> dict:  # noqa: ARG002
         """Return a JSON Schema representation of a generic number type.
 
         Args:
@@ -221,7 +233,9 @@ class SQLToJSONSchema:
         return th.NumberType.type_dict  # type: ignore[no-any-return]
 
     @to_jsonschema.register
-    def string_to_jsonschema(self, column_type: sqlalchemy.types.String) -> dict:  # noqa: PLR6301
+    def string_to_jsonschema(
+        self, column_type: sqlalchemy.types.String
+    ) -> dict:  # noqa: PLR6301
         """Return a JSON Schema representation of a generic string type.
 
         Args:
@@ -236,7 +250,9 @@ class SQLToJSONSchema:
         return th.StringType.type_dict  # type: ignore[no-any-return]
 
     @to_jsonschema.register
-    def boolean_to_jsonschema(self, column_type: sqlalchemy.types.Boolean) -> dict:  # noqa: ARG002, PLR6301
+    def boolean_to_jsonschema(
+        self, column_type: sqlalchemy.types.Boolean
+    ) -> dict:  # noqa: ARG002, PLR6301
         """Return a JSON Schema representation of a boolean type.
 
         Args:
@@ -278,8 +294,8 @@ class JSONSchemaToSQL:
             "integer": sqlalchemy.types.INTEGER,
             "number": sqlalchemy.types.DECIMAL,
             "boolean": sqlalchemy.types.BOOLEAN,
-            "object": sqlalchemy.types.VARCHAR,
-            "array": sqlalchemy.types.VARCHAR,
+            "object": sqlalchemy.types.VARCHAR(self._max_varchar_length),
+            "array": sqlalchemy.types.VARCHAR(self._max_varchar_length),
         }
 
         # Format handlers for string types
@@ -301,7 +317,7 @@ class JSONSchemaToSQL:
         self._sql_datatype_mapping: dict[str, JSONtoSQLHandler] = {}
 
         self._fallback_type: type[sqlalchemy.types.TypeEngine] = (
-            sqlalchemy.types.VARCHAR
+            sqlalchemy.types.VARCHAR(self._max_varchar_length)
         )
 
     @classmethod
@@ -351,7 +367,9 @@ class JSONSchemaToSQL:
             return handler()  # type: ignore[no-any-return]
         return handler(schema)
 
-    def _handle_singer_decimal(self, schema: dict) -> sqlalchemy.types.TypeEngine:  # noqa: PLR6301
+    def _handle_singer_decimal(
+        self, schema: dict
+    ) -> sqlalchemy.types.TypeEngine:  # noqa: PLR6301
         """Handle a x-singer.decimal format.
 
         Args:
@@ -435,7 +453,7 @@ class JSONSchemaToSQL:
         Returns:
             A VARCHAR type.
         """
-        return sqlalchemy.types.VARCHAR()
+        return sqlalchemy.types.VARCHAR(self._max_varchar_length)
 
     def handle_raw_string(self, schema: dict) -> sqlalchemy.types.TypeEngine:
         """Handle a string type generically.
